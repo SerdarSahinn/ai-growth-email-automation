@@ -42,29 +42,29 @@
 
 ## �� Sistem Görselleri
 ### �� Ana Workflow
-![n8n Workflow](ScreenShots/workflow.jpg)
+![n8n Workflow](ai-growth-email-automation/ScreenShots/workflow.jpg)
 *n8n ana otomasyon iş akışı - Schedule trigger, Google Sheets bağlantısı, segment filtreleri*
 
 ### �� Segment Filtreleri
-![If Nodes](ScreenShots/if.jpg)
+![If Nodes](ai-growth-email-automation/ScreenShots/if.jpg)
 *Segment A, B, C için If node'ları - Müşteri gruplarını filtreleme*
 
 ### 💻 Kod İşlemleri
-![Code Node](ScreenShots/code.jpg)
+![Code Node](ai-growth-email-automation/ScreenShots/code.jpg)
 *Code node'ları - Zaman hesaplama ve email gönderim mantığı*
 
 ### ✅ Email Gönderim Kontrolü
-![If3 Node](ScreenShots/if3.jpg)
+![If3 Node](ai-growth-email-automation/ScreenShots/if3.jpg)
 *Email gönderim kontrolü - emailGonder filtresi*
 
 ### 📊 Google Sheets Entegrasyonu
-![Google Sheets](ScreenShots/rowinsheet.jpg)
+![Google Sheets](ai-growth-email-automation/ScreenShots/rowinsheet.jpg)
 *Google Sheets veri çekme ve güncelleme işlemleri*
 
 ### ✏️ Veri Düzenleme
-![Edit Fields](ScreenShots/editfields.jpg)
+![Edit Fields](ai-growth-email-automation/ScreenShots/editfields.jpg)
 *Email içeriği ve konu düzenleme*
 
 ### �� Email Gönderimi
-![Send Message](ScreenShots/sendmessage.jpg)
+![Send Message](ai-growth-email-automation/ScreenShots/sendmessage.jpg)
 *Gmail API ile email gönderim*
