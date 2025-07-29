@@ -1,0 +1,1186 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 9
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "id": "45b229d6-c433-4bb2-a7e7-c994d2528b4a",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "1f0mCGxnnKiC5QXZ8_5sDrhsiAA3krWJXHgtthBNTIvQ",
+          "mode": "list",
+          "cachedResultName": "Adsız e-tablo",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1f0mCGxnnKiC5QXZ8_5sDrhsiAA3krWJXHgtthBNTIvQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sayfa1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1f0mCGxnnKiC5QXZ8_5sDrhsiAA3krWJXHgtthBNTIvQ/edit#gid=0"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        208,
+        0
+      ],
+      "id": "20183e39-07cf-4e16-b4ec-82c2bb8ca5b1",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RWO80GJpiKMztqh3",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "c6aa949b-b27d-495a-83db-51951774c1bb",
+              "leftValue": "={{ $json.segment.trim() }}",
+              "rightValue": "A",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "b01371f4-972a-4b63-b7e6-89e18348fc67",
+              "leftValue": "={{ $json.durum }}",
+              "rightValue": "bekliyor",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "1b07732d-e75f-4b9a-9eb7-1d623e8b0b9e",
+              "leftValue": "={{ $json.email_sayisi }}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        416,
+        0
+      ],
+      "id": "5e532032-244f-44ff-be07-376dd11ab5ef",
+      "name": "If",
+      "alwaysOutputData": false,
+      "executeOnce": false,
+      "retryOnFail": false
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  console.log(\"Input email_sayisi:\", item.json.email_sayisi);\n  console.log(\"Input durum:\", item.json.durum);\n  \n  // Tarih hesaplama\n  const ilkIletisim = new Date(item.json.son_aktivite);\n  const simdi = new Date();\n  const gunFarki = Math.floor((simdi - ilkIletisim) / (1000 * 60 * 60 * 24));\n  console.log(\"gunFarki:\", gunFarki);\n  \n  // Email gönderme kontrolü ve template seçimi\n  let emailGonder = false;\n  let emailKonu = \"\";\n  let emailIcerik = \"\";\n  \n  if ((item.json.email_sayisi === 0 || item.json.email_sayisi === \"\") && gunFarki >= 2) {\n    // 1. Email: İlk iletişim + 2 gün sonra\n    emailGonder = true;\n    emailKonu = \"Özel Teklifiniz Hazır!\";\n    \n    const trackingPixel = '<img src=\"https://script.google.com/macros/s/AKfycbyiq-TZ7RhVwu6b6yRtfRaarB33y15CCpyc_o8L_IcWmogBJa323xkDptneea-cUk0/exec?email={{email}}&campaign={{campaign}}&segment={{segment}}\" width=\"1\" height=\"1\" style=\"display:none;\" alt=\"\">';\n    \n    emailIcerik = `<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>Deneme Dersi Sonrası</title></head><body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333;\"><div style=\"max-width: 600px; margin: 0 auto; padding: 20px;\"><div style=\"text-align: center; margin-bottom: 30px;\"><img src=\"https://konusarakogren.com/logo.png\" alt=\"Konuşarak Öğren\" style=\"max-width: 200px;\"></div><h2 style=\"color: #2c5aa0;\">Merhaba ${item.json.ad},</h2><p>Deneme dersinizden bu yana 2 gün geçti. Bu süre zarfında İngilizce öğrenme yolculuğunuzda size nasıl yardımcı olabileceğimizi düşündük.</p><div style=\"text-align: center; margin: 30px 0;\"><a href=\"https://konusarakogren.com/ozel-teklif?utm_source=email&utm_medium=automation&utm_campaign=segment_a_email1&utm_content=cta_button&utm_term=ozel_teklif&email=${item.json.email}\" style=\"background-color: #2c5aa0; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;\">Özel Teklifinizi Görün</a></div><p style=\"font-size: 14px; color: #666;\">Bu teklif sadece 48 saat geçerlidir. Hemen harekete geçin ve İngilizce öğrenme yolculuğunuza başlayın!</p><hr style=\"border: none; border-top: 1px solid #eee; margin: 30px 0;\"><p style=\"font-size: 12px; color: #999;\">Bu email size ${item.json.email} adresine gönderilmiştir. <a href=\"https://konusarakogren.com/unsubscribe?email=${item.json.email}\" style=\"color: #2c5aa0;\">Abonelikten çık</a></p></div>${trackingPixel}</body></html>`;\n    \n  } else if (item.json.email_sayisi === 1 && gunFarki >= 7) {\n    // 2. Email: 1. email + 5 gün sonra\n    emailGonder = true;\n    emailKonu = \"Hala düşünüyor musunuz?\";\n    emailIcerik = \"2. email içeriği buraya gelecek\";\n    \n  } else if (item.json.email_sayisi === 2 && gunFarki >= 14) {\n    // 3. Email: 2. email + 7 gün sonra\n    emailGonder = true;\n    emailKonu = \"Son fırsat!\";\n    emailIcerik = \"3. email içeriği buraya gelecek\";\n  }\n  \n  console.log(\"emailGonder (after conditions):\", emailGonder);\n\n  // Email sayısı ve durum güncelleme\n  if (emailGonder) {\n    item.json.email_sayisi = (item.json.email_sayisi === \"\" ? 0 : item.json.email_sayisi) + 1;\n    item.json.durum = \"email_gonderildi\";\n    console.log(\"Updated email_sayisi (if true):\", item.json.email_sayisi);\n    console.log(\"Updated durum (if true):\", item.json.durum);\n  } else {\n    item.json.email_sayisi = item.json.email_sayisi;\n    item.json.durum = item.json.durum;\n    console.log(\"emailGonder was false. email_sayisi (unchanged):\", item.json.email_sayisi);\n    console.log(\"emailGonder was false. durum (unchanged):\", item.json.durum);\n  }\n  \n  // Veriyi güncelle\n  item.json.email_konusu = emailKonu;\n  item.json.email_icerik = emailIcerik;\n  item.json.emailGonder = emailGonder;\n  item.json.gunFarki = gunFarki;\n  item.json.alici_email = item.json.email;\n  item.json.email = item.json.email;\n  item.json.ad = item.json.ad;\n  item.json.segment = item.json.segment;\n  item.json.son_aktivite = item.json.son_aktivite;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        624,
+        -96
+      ],
+      "id": "dd87d73e-dd89-4f94-8137-8cd1d248bf46",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $(\"Append or update row in sheet\").item.json.email }}",
+        "subject": "={{ $(\"Edit Fields\").item.json.email_konusu }}",
+        "message": "={{ $(\"Edit Fields\").item.json.email_icerik }}   \n\n\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1568,
+        -112
+      ],
+      "id": "c94f30a6-fee5-4218-94b3-27995e24cbf6",
+      "name": "Send a message",
+      "webhookId": "911096fa-44c0-44b9-80eb-bf0ecbd7672c",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aeqLCq3MM6H8JdBN",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "46afbea3-9f36-4421-a244-8df064df4069",
+              "leftValue": "={{$json.segment}}",
+              "rightValue": "B",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "5ee9cb35-e6fe-44d0-9bba-150c5402b61e",
+              "leftValue": "={{ $json.durum }}",
+              "rightValue": "bekliyor",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "960f6ce4-61de-4140-81f4-0ca10215bbb8",
+              "leftValue": "={{ $json.email_sayisi }}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        624,
+        96
+      ],
+      "id": "da07cbe9-e2c9-49c2-b328-dd16057721c1",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  console.log(\"Input email_sayisi:\", item.json.email_sayisi);\n  console.log(\"Input durum:\", item.json.durum);\n  \n  // Tarih hesaplama\n  const ilkIletisim = new Date(item.json.son_aktivite);\n  const simdi = new Date();\n  const gunFarki = Math.floor((simdi - ilkIletisim) / (1000 * 60 * 60 * 24));\n  console.log(\"gunFarki:\", gunFarki);\n  \n  // Email gönderme kontrolü ve template seçimi\n  let emailGonder = false;\n  let emailKonu = \"\";\n  let emailIcerik = \"\";\n  \n  if ((item.json.email_sayisi === 0 || item.json.email_sayisi === \"\") && gunFarki >= 2) {\n    // 1. Email: İlk iletişim + 2 gün sonra\n    emailGonder = true;\n    emailKonu = \"Ücretsiz Deneme Dersi Rezervasyonu\";\n    \n    const trackingPixel = '<img src=\"https://script.google.com/macros/s/AKfycbyiq-TZ7RhVwu6b6yRtfRaarB33y15CCpyc_o8L_IcWmogBJa323xkDptneea-cUk0/exec?email={{email}}&campaign={{campaign}}&segment={{segment}}\" width=\"1\" height=\"1\" style=\"display:none;\" alt=\"\">';\n    \n    emailIcerik = `<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>Deneme Dersi Rezervasyonu</title></head><body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333;\"><div style=\"max-width: 600px; margin: 0 auto; padding: 20px;\"><div style=\"text-align: center; margin-bottom: 30px;\"><img src=\"https://konusarakogren.com/logo.png\" alt=\"Konuşarak Öğren\" style=\"max-width: 200px;\"></div><h2 style=\"color: #2c5aa0;\">Merhaba ${item.json.ad},</h2><p>Web sitemizdeki formu doldurduğunuz için teşekkürler! Size özel deneme dersi rezervasyonu yapabilirsiniz.</p><div style=\"text-align: center; margin: 30px 0;\"><a href=\"https://konusarakogren.com/deneme-dersi?utm_source=email&utm_medium=automation&utm_campaign=segment_b_email1&utm_content=cta_button&utm_term=deneme_dersi&email=${item.json.email}\" style=\"background-color: #2c5aa0; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;\">Ücretsiz Deneme Dersi Rezerve Et</a></div><p style=\"font-size: 14px; color: #666;\">Deneme dersiniz tamamen ücretsizdir. Hemen rezerve edin ve İngilizce öğrenme deneyimini yaşayın!</p><hr style=\"border: none; border-top: 1px solid #eee; margin: 30px 0;\"><p style=\"font-size: 12px; color: #999;\">Bu email size ${item.json.email} adresine gönderilmiştir. <a href=\"https://konusarakogren.com/unsubscribe?email=${item.json.email}\" style=\"color: #2c5aa0;\">Abonelikten çık</a></p></div>${trackingPixel}</body></html>`;\n    \n  } else if (item.json.email_sayisi === 1 && gunFarki >= 5) {\n    // 2. Email: 1. email + 3 gün sonra (toplam 5 gün)\n    emailGonder = true;\n    emailKonu = \"Deneme dersinizi kaçırmayın!\";\n    emailIcerik = \"2. email içeriği buraya gelecek\";\n    \n  } else if (item.json.email_sayisi === 2 && gunFarki >= 8) {\n    // 3. Email: 2. email + 3 gün sonra (toplam 8 gün)\n    emailGonder = true;\n    emailKonu = \"Son fırsat! Ücretsiz deneme dersi\";\n    emailIcerik = \"3. email içeriği buraya gelecek\";\n  }\n  \n  console.log(\"emailGonder (after conditions):\", emailGonder);\n\n  // Email sayısı ve durum güncelleme\n  if (emailGonder) {\n    item.json.email_sayisi = (item.json.email_sayisi === \"\" ? 0 : item.json.email_sayisi) + 1;\n    item.json.durum = \"email_gonderildi\";\n    console.log(\"Updated email_sayisi (if true):\", item.json.email_sayisi);\n    console.log(\"Updated durum (if true):\", item.json.durum);\n  } else {\n    item.json.email_sayisi = item.json.email_sayisi;\n    item.json.durum = item.json.durum;\n    console.log(\"emailGonder was false. email_sayisi (unchanged):\", item.json.email_sayisi);\n    console.log(\"emailGonder was false. durum (unchanged):\", item.json.durum);\n  }\n  \n  // Veriyi güncelle\n  item.json.email_konusu = emailKonu;\n  item.json.email_icerik = emailIcerik;\n  item.json.emailGonder = emailGonder;\n  item.json.gunFarki = gunFarki;\n  item.json.alici_email = item.json.email;\n  item.json.email = item.json.email;\n  item.json.ad = item.json.ad;\n  item.json.segment = item.json.segment;\n  item.json.son_aktivite = item.json.son_aktivite;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        880,
+        48
+      ],
+      "id": "f9e4e77e-878b-4f32-8c67-824bcc9ab496",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $(\"Append or update row in sheet1\").item.json.email }}",
+        "subject": "={{ $(\"Edit Fields1\").item.json.email_konusu }}",
+        "message": "={{ $(\"Edit Fields1\").item.json.email_icerik }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1744,
+        48
+      ],
+      "id": "c2385128-8843-451a-9f18-1f847f27084b",
+      "name": "Send a message1",
+      "webhookId": "87295c2c-92b4-46b3-ad29-2498bd83b190",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aeqLCq3MM6H8JdBN",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "f9e8945f-a71b-4aa6-b43b-572eb94cc9f5",
+              "leftValue": "={{$json.segment}}",
+              "rightValue": "C",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "dc664d53-e590-49b6-bb2c-c8262b233be7",
+              "leftValue": "={{ $json.durum }}",
+              "rightValue": "=bekliyor",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            },
+            {
+              "id": "d8bb8566-b9f0-4e90-8bd7-78cd4461a026",
+              "leftValue": "={{ $json.email_sayisi }}",
+              "rightValue": 5,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        192
+      ],
+      "id": "79f9d757-e504-4663-92f5-2d7cd42c9842",
+      "name": "If2"
+    },
+    {
+      "parameters": {
+        "jsCode": "for (const item of $input.all()) {\n  console.log(\"Input email_sayisi:\", item.json.email_sayisi);\n  console.log(\"Input durum:\", item.json.durum);\n  \n  // Tarih hesaplama\n  const ilkIletisim = new Date(item.json.son_aktivite);\n  const simdi = new Date();\n  const gunFarki = Math.floor((simdi - ilkIletisim) / (1000 * 60 * 60 * 24));\n  console.log(\"gunFarki:\", gunFarki);\n  \n  // Email gönderme kontrolü ve template seçimi\n  let emailGonder = false;\n  let emailKonu = \"\";\n  let emailIcerik = \"\";\n  \n  if ((item.json.email_sayisi === 0 || item.json.email_sayisi === \"\") && gunFarki >= 2) {\n    // 1. Email: İlk iletişim + 2 gün sonra\n    emailGonder = true;\n    emailKonu = \"Hoş Geldiniz! İngilizce Öğrenmeye Başlayın\";\n    \n    const trackingPixel = '<img src=\"https://script.google.com/macros/s/AKfycbyiq-TZ7RhVwu6b6yRtfRaarB33y15CCpyc_o8L_IcWmogBJa323xkDptneea-cUk0/exec?email={{email}}&campaign={{campaign}}&segment={{segment}}\" width=\"1\" height=\"1\" style=\"display:none;\" alt=\"\">';\n    \n    emailIcerik = `<!DOCTYPE html><html><head><meta charset=\"UTF-8\"><title>Hoş Geldiniz</title></head><body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333;\"><div style=\"max-width: 600px; margin: 0 auto; padding: 20px;\"><div style=\"text-align: center; margin-bottom: 30px;\"><img src=\"https://konusarakogren.com/logo.png\" alt=\"Konuşarak Öğren\" style=\"max-width: 200px;\"></div><h2 style=\"color: #2c5aa0;\">Merhaba ${item.json.ad},</h2><p>Konuşarak Öğren ailesine hoş geldiniz! İngilizce öğrenme yolculuğunuzda size nasıl yardımcı olabileceğimizi göstermek istiyoruz.</p><div style=\"text-align: center; margin: 30px 0;\"><a href=\"https://konusarakogren.com/kesfet?utm_source=email&utm_medium=automation&utm_campaign=segment_c_email1&utm_content=cta_button&utm_term=kesfet&email=${item.json.email}\" style=\"background-color: #2c5aa0; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; display: inline-block;\">İngilizce Öğrenmeyi Keşfedin</a></div><p style=\"font-size: 14px; color: #666;\">Size özel hazırladığımız İngilizce öğrenme programlarını inceleyin ve size en uygun olanını seçin!</p><hr style=\"border: none; border-top: 1px solid #eee; margin: 30px 0;\"><p style=\"font-size: 12px; color: #999;\">Bu email size ${item.json.email} adresine gönderilmiştir. <a href=\"https://konusarakogren.com/unsubscribe?email=${item.json.email}\" style=\"color: #2c5aa0;\">Abonelikten çık</a></p></div>${trackingPixel}</body></html>`;\n    \n  } else if (item.json.email_sayisi === 1 && gunFarki >= 5) {\n    // 2. Email: 1. email + 3 gün sonra (toplam 5 gün)\n    emailGonder = true;\n    emailKonu = \"İngilizce öğrenmeye hazır mısınız?\";\n    emailIcerik = \"2. email içeriği buraya gelecek\";\n    \n  } else if (item.json.email_sayisi === 2 && gunFarki >= 8) {\n    // 3. Email: 2. email + 3 gün sonra (toplam 8 gün)\n    emailGonder = true;\n    emailKonu = \"Son fırsat! İngilizce öğrenmeye başlayın\";\n    emailIcerik = \"3. email içeriği buraya gelecek\";\n  }\n  \n  console.log(\"emailGonder (after conditions):\", emailGonder);\n\n  // Email sayısı ve durum güncelleme\n  if (emailGonder) {\n    item.json.email_sayisi = (item.json.email_sayisi === \"\" ? 0 : item.json.email_sayisi) + 1;\n    item.json.durum = \"email_gonderildi\";\n    console.log(\"Updated email_sayisi (if true):\", item.json.email_sayisi);\n    console.log(\"Updated durum (if true):\", item.json.durum);\n  } else {\n    item.json.email_sayisi = item.json.email_sayisi;\n    item.json.durum = item.json.durum;\n    console.log(\"emailGonder was false. email_sayisi (unchanged):\", item.json.email_sayisi);\n    console.log(\"emailGonder was false. durum (unchanged):\", item.json.durum);\n  }\n  \n  // Veriyi güncelle\n  item.json.email_konusu = emailKonu;\n  item.json.email_icerik = emailIcerik;\n  item.json.emailGonder = emailGonder;\n  item.json.gunFarki = gunFarki;\n  item.json.alici_email = item.json.email;\n  item.json.email = item.json.email;\n  item.json.ad = item.json.ad;\n  item.json.segment = item.json.segment;\n  item.json.son_aktivite = item.json.son_aktivite;\n}\n\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1136,
+        192
+      ],
+      "id": "4315621c-90c8-4a58-96a9-a6d9d549f104",
+      "name": "Code2"
+    },
+    {
+      "parameters": {
+        "sendTo": "={{ $(\"Append or update row in sheet2\").item.json.email }}",
+        "subject": "={{ $(\"Edit Fields2\").item.json.email_konusu }}",
+        "message": "={{ $(\"Edit Fields2\").item.json.email_icerik }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1968,
+        192
+      ],
+      "id": "307d4885-4caf-4b90-a4fc-f4507256dabc",
+      "name": "Send a message2",
+      "webhookId": "0f693839-bc0e-437a-85f0-538545424f74",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "aeqLCq3MM6H8JdBN",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1f0mCGxnnKiC5QXZ8_5sDrhsiAA3krWJXHgtthBNTIvQ",
+          "mode": "list",
+          "cachedResultName": "case-email",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1f0mCGxnnKiC5QXZ8_5sDrhsiAA3krWJXHgtthBNTIvQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sayfa1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1f0mCGxnnKiC5QXZ8_5sDrhsiAA3krWJXHgtthBNTIvQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{$json.email}}",
+            "ad": "={{$json.ad}}",
+            "segment": "={{$json.segment}}",
+            "gonderim_tarihi": "={{$now}}",
+            " email_acildi": "Hayır",
+            "link_tiklandi": "Hayır",
+            "donusum_oldu": "Hayır",
+            "son_aktivite": "={{$json.son_aktivite}}",
+            "email_sayisi": "={{$json.email_sayisi}}",
+            "durum": "={{ $json.durum }}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ad",
+              "displayName": "ad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "segment",
+              "displayName": "segment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "son_aktivite",
+              "displayName": "son_aktivite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email_sayisi",
+              "displayName": "email_sayisi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "durum",
+              "displayName": "durum",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": " email_acildi",
+              "displayName": " email_acildi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "link_tiklandi",
+              "displayName": "link_tiklandi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "donusum_oldu",
+              "displayName": "donusum_oldu",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "gonderim_tarihi",
+              "displayName": "gonderim_tarihi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1088,
+        -112
+      ],
+      "id": "2fb05176-49e8-4e1b-9c91-f7cea048cc3c",
+      "name": "Append or update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RWO80GJpiKMztqh3",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e8ba75aa-5651-48fd-b003-b3d07cf371eb",
+              "name": "email_konusu",
+              "value": "Özel Teklifiniz Hazır!",
+              "type": "string"
+            },
+            {
+              "id": "5acba817-6521-4e8a-bc99-74185f643e9e",
+              "name": "email_icerik",
+              "value": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Deneme Dersi Sonrası</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5;\">\n    <div style=\"max-width: 600px; margin: 0 auto; background-color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">\n        <!-- Header -->\n        <div style=\"background: linear-gradient(135deg, #2c5aa0 0%, #1e3a5f 100%); padding: 30px; text-align: center;\">\n            <img src=\"https://konusarakogren.com/logo.png\" alt=\"Konuşarak Öğren\" style=\"max-width: 180px; filter: brightness(0) invert(1);\">\n        </div>\n        \n        <!-- Content -->\n        <div style=\"padding: 40px 30px;\">\n            <h2 style=\"color: #2c5aa0; margin-bottom: 20px; font-size: 24px;\">Merhaba {{$json.ad}},</h2>\n            \n            <p style=\"font-size: 16px; line-height: 1.8; color: #555; margin-bottom: 30px;\">Deneme dersinizden bu yana 2 gün geçti. Bu süre zarfında İngilizce öğrenme yolculuğunuzda size nasıl yardımcı olabileceğimizi düşündük.</p>\n            \n            <!-- CTA Button -->\n            <div style=\"text-align: center; margin: 40px 0;\">\n                <a href=\"https://script.google.com/macros/s/AKfycbxAdNm5vSmSZzzgiCOvzab3iCL1KcChKlBFcZIa6CJbARLcE7A9XJ3dp1u_9e1s-fWt/exec?email={{$json.email}}&campaign=segment_a_email1&segment=segment_a&link=ozel_teklif\" target=\"_blank\" style=\"background: linear-gradient(135deg, #2c5aa0 0%, #1e3a5f 100%); color: white; padding: 18px 35px; text-decoration: none; border-radius: 50px; display: inline-block; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(44, 90, 160, 0.3); transition: all 0.3s ease;\">�� Özel Teklifinizi Görün</a>\n            </div>\n            \n            <!-- Offer Info -->\n            <div style=\"background-color: #f8f9fa; border-left: 4px solid #2c5aa0; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0;\">\n                <p style=\"font-size: 14px; color: #666; margin: 0; font-style: italic;\">⏰ Bu teklif sadece 48 saat geçerlidir. Hemen harekete geçin ve İngilizce öğrenme yolculuğunuza başlayın!</p>\n            </div>\n        </div>\n        \n        <!-- Footer -->\n        <div style=\"background-color: #f8f9fa; padding: 25px 30px; border-top: 1px solid #eee;\">\n            <p style=\"font-size: 12px; color: #999; margin: 0; text-align: center;\">\n                Bu email size <strong>{{$json.email}}</strong> adresine gönderilmiştir.<br>\n                <a href=\"https://konusarakogren.com/unsubscribe?email={{$json.email}}\" style=\"color: #2c5aa0; text-decoration: none;\">�� Abonelikten çık</a>\n            </p>\n        </div>\n    </div>\n    \n    <!-- Tracking Pixel - Email açılma takibi -->\n    <img src=\"https://script.google.com/macros/s/AKfycbxAdNm5vSmSZzzgiCOvzab3iCL1KcChKlBFcZIa6CJbARLcE7A9XJ3dp1u_9e1s-fWt/exec?email={{$json.email}}&campaign=segment_a_email1&segment=segment_a\" width=\"1\" height=\"1\" style=\"display:none;\" alt=\"\">\n</body>\n</html>",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1328,
+        -112
+      ],
+      "id": "9358c49e-dc44-44f3-ac23-44b5582b8e9f",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1f0mCGxnnKiC5QXZ8_5sDrhsiAA3krWJXHgtthBNTIvQ",
+          "mode": "list",
+          "cachedResultName": "case-email",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1f0mCGxnnKiC5QXZ8_5sDrhsiAA3krWJXHgtthBNTIvQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sayfa1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1f0mCGxnnKiC5QXZ8_5sDrhsiAA3krWJXHgtthBNTIvQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{$json.email}}",
+            "ad": "={{$json.ad}}",
+            "segment": "={{$json.segment}}",
+            "son_aktivite": "={{$json.son_aktivite}}",
+            "email_sayisi": "={{$json.email_sayisi}}",
+            " email_acildi": "Evet",
+            "link_tiklandi": "Evet",
+            "donusum_oldu": "Hayır",
+            "gonderim_tarihi": "={{$now}}",
+            "durum": "={{$json.durum}}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ad",
+              "displayName": "ad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "segment",
+              "displayName": "segment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "son_aktivite",
+              "displayName": "son_aktivite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email_sayisi",
+              "displayName": "email_sayisi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "durum",
+              "displayName": "durum",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": " email_acildi",
+              "displayName": " email_acildi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "link_tiklandi",
+              "displayName": "link_tiklandi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "donusum_oldu",
+              "displayName": "donusum_oldu",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "gonderim_tarihi",
+              "displayName": "gonderim_tarihi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1296,
+        48
+      ],
+      "id": "2dceeccb-e3de-4772-b78b-54e6e65adbfe",
+      "name": "Append or update row in sheet1",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RWO80GJpiKMztqh3",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e8ba75aa-5651-48fd-b003-b3d07cf371eb",
+              "name": "email_konusu",
+              "value": "Deneme Dersinizi Rezerve Edin!",
+              "type": "string"
+            },
+            {
+              "id": "5acba817-6521-4e8a-bc99-74185f643e9e",
+              "name": "email_icerik",
+              "value": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Deneme Dersi Rezervasyonu</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5;\">\n    <div style=\"max-width: 600px; margin: 0 auto; background-color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">\n        <!-- Header -->\n        <div style=\"background: linear-gradient(135deg, #2c5aa0 0%, #1e3a5f 100%); padding: 30px; text-align: center;\">\n            <img src=\"https://konusarakogren.com/logo.png\" alt=\"Konuşarak Öğren\" style=\"max-width: 180px; filter: brightness(0) invert(1);\">\n        </div>\n        \n        <!-- Content -->\n        <div style=\"padding: 40px 30px;\">\n            <h2 style=\"color: #2c5aa0; margin-bottom: 20px; font-size: 24px;\">Merhaba {{$json.ad}},</h2>\n            \n            <p style=\"font-size: 16px; line-height: 1.8; color: #555; margin-bottom: 30px;\">Web sitemizdeki formu doldurduğunuz için teşekkürler! Size özel deneme dersi rezervasyonu yapabilirsiniz.</p>\n            \n            <!-- CTA Button -->\n            <div style=\"text-align: center; margin: 40px 0;\">\n                <a href=\"https://script.google.com/macros/s/AKfycbxAdNm5vSmSZzzgiCOvzab3iCL1KcChKlBFcZIa6CJbARLcE7A9XJ3dp1u_9e1s-fWt/exec?email={{$json.email}}&campaign=segment_b_webform&segment=segment_b&link=deneme_dersi\" target=\"_blank\" style=\"background: linear-gradient(135deg, #2c5aa0 0%, #1e3a5f 100%); color: white; padding: 18px 35px; text-decoration: none; border-radius: 50px; display: inline-block; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(44, 90, 160, 0.3); transition: all 0.3s ease;\">🎁 Ücretsiz Deneme Dersi Rezerve Et</a>\n            </div>\n            \n            <!-- Offer Info -->\n            <div style=\"background-color: #f8f9fa; border-left: 4px solid #2c5aa0; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0;\">\n                <p style=\"font-size: 14px; color: #666; margin: 0; font-style: italic;\">🎯 Deneme dersiniz tamamen ücretsizdir. Hemen rezerve edin ve İngilizce öğrenme deneyimini yaşayın!</p>\n            </div>\n        </div>\n        \n        <!-- Footer -->\n        <div style=\"background-color: #f8f9fa; padding: 25px 30px; border-top: 1px solid #eee;\">\n            <p style=\"font-size: 12px; color: #999; margin: 0; text-align: center;\">\n                Bu email size <strong>{{$json.email}}</strong> adresine gönderilmiştir.<br>\n                <a href=\"https://konusarakogren.com/unsubscribe?email={{$json.email}}\" style=\"color: #2c5aa0; text-decoration: none;\">�� Abonelikten çık</a>\n            </p>\n        </div>\n    </div>\n    \n    <!-- Tracking Pixel - Email açılma takibi -->\n    <img src=\"https://script.google.com/macros/s/AKfycbxAdNm5vSmSZzzgiCOvzab3iCL1KcChKlBFcZIa6CJbARLcE7A9XJ3dp1u_9e1s-fWt/exec?email={{$json.email}}&campaign=segment_b_webform&segment=segment_b\" width=\"1\" height=\"1\" style=\"display:none;\" alt=\"\">\n</body>\n</html>",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1520,
+        48
+      ],
+      "id": "14d5cd60-ff37-446b-b0d6-9b28ac303343",
+      "name": "Edit Fields1"
+    },
+    {
+      "parameters": {
+        "operation": "appendOrUpdate",
+        "documentId": {
+          "__rl": true,
+          "value": "1f0mCGxnnKiC5QXZ8_5sDrhsiAA3krWJXHgtthBNTIvQ",
+          "mode": "list",
+          "cachedResultName": "case-email",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1f0mCGxnnKiC5QXZ8_5sDrhsiAA3krWJXHgtthBNTIvQ/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sayfa1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1f0mCGxnnKiC5QXZ8_5sDrhsiAA3krWJXHgtthBNTIvQ/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "email": "={{$json.email}}",
+            "ad": "={{$json.ad}}",
+            "segment": "={{$json.segment}}",
+            "son_aktivite": "={{$json.son_aktivite}}",
+            "email_sayisi": "={{$json.email_sayisi}}",
+            " email_acildi": "Evet",
+            "gonderim_tarihi": "={{$now}}",
+            "donusum_oldu": "Hayır",
+            "link_tiklandi": "Hayır",
+            "durum": "={{$json.durum}}"
+          },
+          "matchingColumns": [
+            "email"
+          ],
+          "schema": [
+            {
+              "id": "email",
+              "displayName": "email",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "ad",
+              "displayName": "ad",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "segment",
+              "displayName": "segment",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "son_aktivite",
+              "displayName": "son_aktivite",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "email_sayisi",
+              "displayName": "email_sayisi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "durum",
+              "displayName": "durum",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": " email_acildi",
+              "displayName": " email_acildi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "link_tiklandi",
+              "displayName": "link_tiklandi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "donusum_oldu",
+              "displayName": "donusum_oldu",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "gonderim_tarihi",
+              "displayName": "gonderim_tarihi",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.6,
+      "position": [
+        1536,
+        192
+      ],
+      "id": "5f420b08-996a-47d2-88b2-74c7b97916c2",
+      "name": "Append or update row in sheet2",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "RWO80GJpiKMztqh3",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "e8ba75aa-5651-48fd-b003-b3d07cf371eb",
+              "name": "email_konusu",
+              "value": "İngilizce Öğrenme Yolculuğunuza Başlayın!",
+              "type": "string"
+            },
+            {
+              "id": "5acba817-6521-4e8a-bc99-74185f643e9e",
+              "name": "email_icerik",
+              "value": "=<!DOCTYPE html>\n<html>\n<head>\n    <meta charset=\"UTF-8\">\n    <title>Yeni İletişim</title>\n</head>\n<body style=\"font-family: Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 0; background-color: #f5f5f5;\">\n    <div style=\"max-width: 600px; margin: 0 auto; background-color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);\">\n        <!-- Header -->\n        <div style=\"background: linear-gradient(135deg, #2c5aa0 0%, #1e3a5f 100%); padding: 30px; text-align: center;\">\n            <img src=\"https://konusarakogren.com/logo.png\" alt=\"Konuşarak Öğren\" style=\"max-width: 180px; filter: brightness(0) invert(1);\">\n        </div>\n        \n        <!-- Content -->\n        <div style=\"padding: 40px 30px;\">\n            <h2 style=\"color: #2c5aa0; margin-bottom: 20px; font-size: 24px;\">Merhaba {{$json.ad}},</h2>\n            \n            <p style=\"font-size: 16px; line-height: 1.8; color: #555; margin-bottom: 30px;\">Bizimle iletişime geçtiğiniz için teşekkürler! Size özel fırsatlarımızı keşfetmek ister misiniz?</p>\n            \n            <!-- CTA Button -->\n            <div style=\"text-align: center; margin: 40px 0;\">\n                <a href=\"https://script.google.com/macros/s/AKfycbxAdNm5vSmSZzzgiCOvzab3iCL1KcChKlBFcZIa6CJbARLcE7A9XJ3dp1u_9e1s-fWt/exec?email={{$json.email}}&campaign=segment_c_iletisim&segment=segment_c&link=ozel_firsatlar\" target=\"_blank\" style=\"background: linear-gradient(135deg, #2c5aa0 0%, #1e3a5f 100%); color: white; padding: 18px 35px; text-decoration: none; border-radius: 50px; display: inline-block; font-size: 16px; font-weight: bold; box-shadow: 0 4px 15px rgba(44, 90, 160, 0.3); transition: all 0.3s ease;\">🌟 Özel Fırsatları Görüntüle</a>\n            </div>\n            \n            <!-- Offer Info -->\n            <div style=\"background-color: #f8f9fa; border-left: 4px solid #2c5aa0; padding: 20px; margin: 30px 0; border-radius: 0 8px 8px 0;\">\n                <p style=\"font-size: 14px; color: #666; margin: 0; font-style: italic;\">�� Size özel hazırladığımız fırsatları kaçırmayın! Hemen tıklayın ve avantajları keşfedin!</p>\n            </div>\n        </div>\n        \n        <!-- Footer -->\n        <div style=\"background-color: #f8f9fa; padding: 25px 30px; border-top: 1px solid #eee;\">\n            <p style=\"font-size: 12px; color: #999; margin: 0; text-align: center;\">\n                Bu email size <strong>{{$json.email}}</strong> adresine gönderilmiştir.<br>\n                <a href=\"https://konusarakogren.com/unsubscribe?email={{$json.email}}\" style=\"color: #2c5aa0; text-decoration: none;\">�� Abonelikten çık</a>\n            </p>\n        </div>\n    </div>\n    \n    <!-- Tracking Pixel - Email açılma takibi -->\n    <img src=\"https://script.google.com/macros/s/AKfycbxAdNm5vSmSZzzgiCOvzab3iCL1KcChKlBFcZIa6CJbARLcE7A9XJ3dp1u_9e1s-fWt/exec?email={{$json.email}}&campaign=segment_c_iletisim&segment=segment_c\" width=\"1\" height=\"1\" style=\"display:none;\" alt=\"\">\n</body>\n</html>",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1744,
+        192
+      ],
+      "id": "0fe119aa-3c79-413b-9098-b21bf64b112d",
+      "name": "Edit Fields2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "e7047de5-bc56-4933-a44a-8337f8866ae9",
+              "leftValue": "={{ $json.emailGonder }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        -96
+      ],
+      "id": "2be02777-6b02-4436-810c-eca517176e2e",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "4b92922c-c9f1-4c12-9b2f-9dadc43d229b",
+              "leftValue": "={{ $json.emailGonder }}",
+              "rightValue": "=true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1088,
+        48
+      ],
+      "id": "83e6ae9c-a4f0-49c4-8a1f-a34eefbd82d0",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "415d973a-5bbf-4767-bb71-3d305c6d457c",
+              "leftValue": "={{ $json.emailGonder }}",
+              "rightValue": "=true",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1344,
+        192
+      ],
+      "id": "43971e6e-84ee-4fa9-8d4d-d9ecc3e9ff25",
+      "name": "If5"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Get row(s) in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s) in sheet": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Code2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code2": {
+      "main": [
+        [
+          {
+            "node": "If5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a message": {
+      "main": [
+        []
+      ]
+    },
+    "Append or update row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields1": {
+      "main": [
+        [
+          {
+            "node": "Send a message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append or update row in sheet2": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields2": {
+      "main": [
+        [
+          {
+            "node": "Send a message2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If5": {
+      "main": [
+        [
+          {
+            "node": "Append or update row in sheet2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4e10667f-b0ae-4fec-bd36-3f0095b593cf",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "186c2194e3465cb2e8f08cba68558db8ae9a2df45b3901e8ee046e655de18dd2"
+  },
+  "id": "eGGOl1y78ypiTvBY",
+  "tags": []
+}
